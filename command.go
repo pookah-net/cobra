@@ -14,6 +14,12 @@
 
 // Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
 // In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
+//
+// This version has the following changes:
+//   - Uses a colon for Rails-style commands (e.g. `db:seed:load`)
+//   - Exposes the `commands` property.
+//   - It provides a `Commands()` method to make the array [sic] available
+//     outside of Cobra.
 package cobra
 
 import (
@@ -902,6 +908,39 @@ func (c *Command) ArgsLenAtDash() int {
 	return c.Flags().ArgsLenAtDash()
 }
 
+//========
+// Changes
+
+// argv takes a Rails-style command line, as entered, and transforms it into a
+// form that Cobra can work with.
+func (c *Command) argv(args []string) []string {
+
+	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
+	if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
+		args = os.Args[1:]
+	}
+
+	cmdString := args[1]
+	cmdLine := args[2:]
+
+	// Reconstruct the command line
+	var newCmdLine []string
+	newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
+	newCmdLine = append(newCmdLine, cmdLine...)
+
+	return newCmdLine
+}
+
+// splitCmdString slices the supplied string into all substrings separated by
+// a colon (":") and returns a slice of the substrings. If the cmdString
+// does not contain a colon, this returns a slice of length 1 whose only
+// element is the cmdString.
+func (c *Command) splitCmdString(cmdString string) []string {
+	return strings.Split(cmdString, ":")
+}
+
+//========
+
 func (c *Command) execute(a []string) (err error) {
 	if c == nil {
 		return fmt.Errorf("called Execute() on a nil Command")
@@ -1099,12 +1138,13 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 	// initialize help at the last point to allow for user overriding
 	c.InitDefaultHelpCmd()
 
-	args := c.args
+	// args := c.args
+	args := c.argv(os.Args)
 
 	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
-	if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
-		args = os.Args[1:]
-	}
+	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
+	// 	args = os.Args[1:]
+	// }
 
 	// initialize the __complete command to be used for shell completion
 	c.initCompleteCmd(args)

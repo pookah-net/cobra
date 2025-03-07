@@ -262,7 +262,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/pookah-net/cobra"
 )
 
 var rootCmd = &cobra.Command{

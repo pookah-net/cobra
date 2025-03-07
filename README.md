@@ -64,7 +64,7 @@ have children commands and optionally run an action.
 
 In the example above, 'server' is the command.
 
-[More about cobra.Command](https://pkg.go.dev/github.com/spf13/cobra#Command)
+[More about cobra.Command](https://pkg.go.dev/github.com/pookah-net/cobra#Command)
 
 ## Flags
 
@@ -84,13 +84,13 @@ Using Cobra is easy. First, use `go get` to install the latest version
 of the library.
 
 ```
-go get -u github.com/spf13/cobra@latest
+go get -u github.com/pookah-net/cobra@latest
 ```
 
 Next, include Cobra in your application:
 
 ```go
-import "github.com/spf13/cobra"
+import "github.com/pookah-net/cobra"
 ```
 
 # Usage

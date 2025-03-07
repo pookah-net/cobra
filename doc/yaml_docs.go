@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/pookah-net/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )
