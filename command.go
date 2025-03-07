@@ -53,6 +53,29 @@ type Group struct {
 	Title string
 }
 
+// Added
+
+// CommandDelimiter allows us to easily specify which style of command string
+// we're using in this app. StandardDelimiter is the Cobra standard of spaces
+// between commands and subcommands, while RailsDelimiter uses colons.
+//
+// Set the `Delimiter` field on the root command only. Any other Delimiter
+// settings are ignored.
+type CommandDelimiter int
+
+const (
+	// StandardDelimiter sets the standard delimiter of spaces between commands
+	// and subcommands.
+	//
+	// This is the default setting.
+	StandardDelimiter CommandDelimiter = iota
+	// RailsDelimiter sets the Rails-style command delimiter of colons between
+	// commands and subcommands.
+	//
+	// Set this on the root command only; any others are ignored.
+	RailsDelimiter
+)
+
 // Command is just that, a command for your application.
 // E.g.  'go run ...' - 'run' is the command. Cobra requires
 // you to define the usage and description as part of your command
@@ -119,6 +142,13 @@ type Command struct {
 	// will print content of the "Version" variable. A shorthand "v" flag will also be added if the
 	// command does not define one.
 	Version string
+
+	// Specify the type of command delimiter we're using.
+	// The default is `StandardDelimiter`, which uses spaces to separate the command
+	// from subcommands. `RailsDelimiter` uses colons to do that.
+	//
+	// Note: This is only checked for the root command.
+	Delimiter CommandDelimiter
 
 	// The *Run functions are executed in the following order:
 	//   * PersistentPreRun()
@@ -911,30 +941,44 @@ func (c *Command) ArgsLenAtDash() int {
 //========
 // Changes
 
+// delimiter retrieves the command delimiter to be used.
+func (c *Command) delimiter() CommandDelimiter {
+	root := c.Root()
+	return root.Delimiter
+}
+
 // argv takes a Rails-style command line, as entered, and transforms it into a
 // form that Cobra can work with.
 func (c *Command) argv(args []string) []string {
 
 	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
-	if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
-		args = os.Args[1:]
+	// We've already checked to see if c.args is nil.
+	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
+	if filepath.Base(os.Args[0]) != "cobra.test" {
+		args = args[1:]
 	}
 
-	cmdString := args[1]
-	cmdLine := args[2:]
+	if c.delimiter() == RailsDelimiter {
+		cmdString := args[0]
+		cmdLine := args[1:]
 
-	// Reconstruct the command line
-	var newCmdLine []string
-	newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
-	newCmdLine = append(newCmdLine, cmdLine...)
+		// Reconstruct the command line
+		var newCmdLine []string
+		newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
+		newCmdLine = append(newCmdLine, cmdLine...)
+		args = newCmdLine
+	}
 
-	return newCmdLine
+	return args
 }
 
 // splitCmdString slices the supplied string into all substrings separated by
 // a colon (":") and returns a slice of the substrings. If the cmdString
 // does not contain a colon, this returns a slice of length 1 whose only
 // element is the cmdString.
+//
+// Note: this doesn't run *unless* the root command delimiter has been set
+// to `RailsDelimiter`.
 func (c *Command) splitCmdString(cmdString string) []string {
 	return strings.Split(cmdString, ":")
 }
@@ -1138,8 +1182,12 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 	// initialize help at the last point to allow for user overriding
 	c.InitDefaultHelpCmd()
 
+	args := c.args
+
 	// args := c.args
-	args := c.argv(os.Args)
+	if c.args == nil {
+		args = c.argv(os.Args)
+	}
 
 	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
 	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
