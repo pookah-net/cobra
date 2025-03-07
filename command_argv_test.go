@@ -69,3 +69,19 @@ func TestArgvRailsPassesFlags(t *testing.T) {
 		t.Errorf("expected command line (%s) is not the same as the received (%s)", expected, received)
 	}
 }
+
+func TestEmptyArgv(t *testing.T) {
+	var cmdLine []string
+
+	rootCmd := &Command{
+		Use:       "root",
+		Delimiter: RailsStyle,
+		Run:       func(_ *Command, args []string) { cmdLine = args },
+	}
+
+	received := rootCmd.argv(cmdLine)
+
+	if len(received) != 0 {
+		t.Errorf("should have received an empty string slice; got %s instead", received)
+	}
+}

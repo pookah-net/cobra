@@ -951,6 +951,11 @@ func (c *Command) delimiter() CommandDelimiter {
 // form that Cobra can work with.
 func (c *Command) argv(args []string) []string {
 
+	// Handle empty argv
+	if len(args) == 0 {
+		return args
+	}
+
 	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
 	// We've already checked to see if c.args is nil.
 	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
