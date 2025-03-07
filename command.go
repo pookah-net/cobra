@@ -64,16 +64,16 @@ type Group struct {
 type CommandDelimiter int
 
 const (
-	// StandardDelimiter sets the standard delimiter of spaces between commands
+	// StandardStyle sets the standard delimiter of spaces between commands
 	// and subcommands.
 	//
 	// This is the default setting.
-	StandardDelimiter CommandDelimiter = iota
-	// RailsDelimiter sets the Rails-style command delimiter of colons between
+	StandardStyle CommandDelimiter = iota
+	// RailsStyle sets the Rails-style command delimiter of colons between
 	// commands and subcommands.
 	//
 	// Set this on the root command only; any others are ignored.
-	RailsDelimiter
+	RailsStyle
 )
 
 // Command is just that, a command for your application.
@@ -958,7 +958,7 @@ func (c *Command) argv(args []string) []string {
 		args = args[1:]
 	}
 
-	if c.delimiter() == RailsDelimiter {
+	if c.delimiter() == RailsStyle {
 		cmdString := args[0]
 		cmdLine := args[1:]
 

@@ -43,18 +43,18 @@ intuitively know how to interact with them.
 
 The pattern to follow is
 `APPNAME VERB NOUN --ADJECTIVE`
-    or
+  or
 `APPNAME COMMAND ARG --FLAG`.
 
 A few good real world examples may better illustrate this point.
 
 In the following example, 'server' is a command, and 'port' is a flag:
 
-    hugo server --port=1313
+  hugo server --port=1313
 
 In this command we are telling Git to clone the url bare.
 
-    git clone URL --bare
+  git clone URL --bare
 
 ## Commands
 
@@ -83,30 +83,87 @@ which maintains the same interface while adding POSIX compliance.
 Using Cobra is easy. First, use `go get` to install the latest version
 of the library.
 
-```
-go get -u github.com/pookah-net/cobra@latest
-```
+  ```bash
+  go get -u github.com/pookah-net/cobra@latest
+  ```
 
 Next, include Cobra in your application:
 
-```go
-import "github.com/pookah-net/cobra"
-```
+  ```go
+  import "github.com/pookah-net/cobra"
+  ```
 
 # Usage
+
 `cobra-cli` is a command line program to generate cobra applications and command files.
 It will bootstrap your application scaffolding to rapidly
 develop a Cobra-based application. It is the easiest way to incorporate Cobra into your application.
 
 It can be installed by running:
 
-```
-go install github.com/spf13/cobra-cli@latest
-```
+  ```bash
+  go install github.com/spf13/cobra-cli@latest
+  ```
 
 For complete details on using the Cobra-CLI generator, please read [The Cobra Generator README](https://github.com/spf13/cobra-cli/blob/main/README.md)
 
 For complete details on using the Cobra library, please read [The Cobra User Guide](site/content/user_guide.md).
+
+# Changes
+
+This version has been adapted so you can use Rails-style command strings:
+e.g. `db:seed:load`. This is instead of the more usual:
+
+  ```go
+    myApp db seed load some_argument --a-flag
+  ```
+
+To use this feature, set the `Delimiter` field on the *Root command*. If you set it anywhere else, it will be ignored. There are two settings: `StandardStyle` (a space) and the `RailsStyle` (":").
+
+  ```go
+
+  myCommand := *cobra.Command{
+    Use: "Usage"
+    Delimiter: RailsStyle
+    ...
+  }
+  ```
+
+You do not have to set the StandardDelimiter because Go defaults an unset `int` to zero, which is the identifier for the standard style.
+
+  ```go
+    // ...
+    type CommandDelimiter int
+
+  const (
+    // StandardDelimiter sets the standard delimiter of spaces between commands
+    // and subcommands.
+    //
+    // This is the default setting.
+    StandardStyle CommandDelimiter = iota
+    // RailsDelimiter sets the Rails-style command delimiter of colons between
+    // commands and subcommands.
+    //
+    // Set this on the root command only; any others are ignored.
+    RailsStyle
+  )
+
+  ```
+
+Note: This change will *not* handle colons anywhere else on the command line. It's restricted to the command string portion of `os.Args` only.
+If you set c.args, it won't touch that, either.
+
+A few tests have been included in `command_argv_test.go`.
+
+## Why?
+
+I needed this for a project and decided to just implement it rather than try and persuade the Cobra team, who're doing a fantastic job, to implement a push request from me. Especially as there's been so little demand for this feature!
+
+See: https://github.com/spf13/cobra/issues/761
+
+## Support
+
+I endeavor to provide support for the above changes, but can't provide any for Cobra in general.
 
 # License
 
