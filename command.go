@@ -963,15 +963,17 @@ func (c *Command) argv(args []string) []string {
 		args = args[1:]
 	}
 
-	if c.delimiter() == RailsStyle {
-		cmdString := args[0]
-		cmdLine := args[1:]
+	if args != nil {
+		if c.delimiter() == RailsStyle {
+			cmdString := args[0]
+			cmdLine := args[1:]
 
-		// Reconstruct the command line
-		var newCmdLine []string
-		newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
-		newCmdLine = append(newCmdLine, cmdLine...)
-		args = newCmdLine
+			// Reconstruct the command line
+			var newCmdLine []string
+			newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
+			newCmdLine = append(newCmdLine, cmdLine...)
+			args = newCmdLine
+		}
 	}
 
 	return args
@@ -1187,12 +1189,22 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 	// initialize help at the last point to allow for user overriding
 	c.InitDefaultHelpCmd()
 
-	args := c.args
-
 	// args := c.args
-	if c.args == nil {
-		args = c.argv(os.Args)
-	}
+
+	// var args []string
+
+	// ---------------
+	// This is where we call c.argv instead of just running the following line:
+	//
+	// // Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
+	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
+	// ---------------
+	args := c.argv(c.args)
+	// if c.args == nil {
+	// 	args = c.argv(os.Args)
+	// } else {
+	// 	args = c.args
+	// }
 
 	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
 	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {

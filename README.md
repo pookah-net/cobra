@@ -153,7 +153,14 @@ You do not have to set the StandardDelimiter because Go defaults an unset `int` 
 Note: This change will *not* handle colons anywhere else on the command line. It's restricted to the command string portion of `os.Args` only.
 If you set c.args, it won't touch that, either.
 
-A few tests have been included in `command_argv_test.go`.
+## Testing
+
+A few tests have been included in `command_argv_test.go`. These do basic testing for the additional code. To keep them separate from the original test suite, they're in `command_argv_test.go`.
+
+A note about the tests:
+This now passes all of the same tests as the original implementation. There are some tests that fail in the original, and they also fail in this version.
+
+Because this initially confused me, to run the tests: `make test`.
 
 ## Why?
 
