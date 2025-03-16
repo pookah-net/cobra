@@ -40,6 +40,7 @@ func legacyArgs(cmd *Command, args []string) error {
 
 // NoArgs returns an error if any args are included.
 func NoArgs(cmd *Command, args []string) error {
+	fmt.Println("NO Args args: ", args)
 	if len(args) > 0 {
 		return fmt.Errorf("unknown command %q for %q", args[0], cmd.CommandPath())
 	}

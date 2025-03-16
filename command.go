@@ -947,36 +947,10 @@ func (c *Command) delimiter() CommandDelimiter {
 	return root.Delimiter
 }
 
-// argv takes a Rails-style command line, as entered, and transforms it into a
-// form that Cobra can work with.
-func (c *Command) argv(args []string) []string {
-
-	// Handle empty argv
-	if len(args) == 0 {
-		return args
-	}
-
-	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
-	// We've already checked to see if c.args is nil.
-	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
-	if filepath.Base(os.Args[0]) != "cobra.test" {
-		args = args[1:]
-	}
-
-	if args != nil {
-		if c.delimiter() == RailsStyle {
-			cmdString := args[0]
-			cmdLine := args[1:]
-
-			// Reconstruct the command line
-			var newCmdLine []string
-			newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
-			newCmdLine = append(newCmdLine, cmdLine...)
-			args = newCmdLine
-		}
-	}
-
-	return args
+// inTestMode returns true if the base name is `cobra.test`, which it is if
+// we're running tests.
+func (c *Command) inTestMode() bool {
+	return filepath.Base(os.Args[0]) == "cobra.test"
 }
 
 // splitCmdString slices the supplied string into all substrings separated by
@@ -988,6 +962,23 @@ func (c *Command) argv(args []string) []string {
 // to `RailsDelimiter`.
 func (c *Command) splitCmdString(cmdString string) []string {
 	return strings.Split(cmdString, ":")
+}
+
+// argv takes a Rails-style command line, as entered, and transforms it into a
+// form that Cobra can work with.
+func (c *Command) argv(args []string) []string {
+	if len(args) == 0 {
+		return args
+	}
+
+	cmdString := args[0]
+	cmdLine := args[1:]
+
+	// Reconstruct the command line
+	var newCmdLine []string
+	newCmdLine = append(newCmdLine, c.splitCmdString(cmdString)...)
+	newCmdLine = append(newCmdLine, cmdLine...)
+	return newCmdLine
 }
 
 //========
@@ -1189,27 +1180,28 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 	// initialize help at the last point to allow for user overriding
 	c.InitDefaultHelpCmd()
 
-	// args := c.args
-
-	// var args []string
+	// Initialize the args slice.
+	var args []string
 
 	// ---------------
 	// This is where we call c.argv instead of just running the following line:
 	//
+	// The original code:
 	// // Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
-	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
-	// ---------------
-	args := c.argv(c.args)
-	// if c.args == nil {
-	// 	args = c.argv(os.Args)
-	// } else {
-	// 	args = c.args
-	// }
-
-	// Workaround FAIL with "go test -v" or "cobra.test -test.v", see #155
 	// if c.args == nil && filepath.Base(os.Args[0]) != "cobra.test" {
 	// 	args = os.Args[1:]
 	// }
+	//
+	// If we're in test mode, checked by seeing if os.Args[0] base name is
+	// `cobra.test`, we run `execute` with c.args. Otherwise we use `os.Args[1:]`.
+	// ---------------
+	if c.inTestMode() {
+		args = c.argv(c.args)
+	}
+
+	if c.delimiter() == RailsStyle {
+		args = c.argv(os.Args[1:])
+	}
 
 	// initialize the __complete command to be used for shell completion
 	c.initCompleteCmd(args)
